@@ -8,72 +8,85 @@ const crypto = require("crypto");
 const fs = require('fs');
 const conf = require('./conf');
 const https = require('https');
+const googlehome = require('./google-home-notifier');
 
-// Line Message API
+
+// load config
 const env = process.env.NODE_ENV || "development";
 const config = require(path.join(__dirname, './', 'config.json'))[env];
 
 const lineUrl = config.lineUrl;
 const lineChannelAccessToken = config.lineChannelAccessToken;
 const lineChannelSecret = config.lineChannelSecret;
-console.log(lineChannelSecret);
-console.log(lineChannelAccessToken);
+const serverIpAddress = config.serverIpAddress;
+const serverPort = config.serverPort;
 
-
-
+// load letsencrypt files.(build https server)
 var options = {
-key: fs.readFileSync(conf.key),
-     cert: fs.readFileSync(conf.fullchain)
+  key: fs.readFileSync(conf.key),
+  cert: fs.readFileSync(conf.fullchain)
 }
 
 var app = express();
 
-// urlencodedとjsonは別々に初期化する
+// initialization
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-var server = https.createServer(options,app);
+// run server
+var server = https.createServer(options, app);
 
 
 console.log('Server is online.');
 
 // Validate signature
 const validate_signature = function(signature, body) {
-    return signature == crypto.createHmac('sha256', lineChannelSecret).update(new Buffer(JSON.stringify(body), 'utf8')).digest('base64');
+  return signature == crypto.createHmac('sha256', lineChannelSecret).update(new Buffer(JSON.stringify(body), 'utf8')).digest('base64');
 };
 
-app.get('/', function( req, res ){
-    res.write( 'ハローワールド' );
-    res.end();
-    });
+app.get('/', function(req, res) {
+  res.write('Hello world');
+  res.end();
+});
 
 app.post('/', function(req, res) {
-    console.log(req.body);
-    //console.log(req.body.text);
-    // リクエストボディを出力
-    // パラメータ名、nameを出力
-    //console.log(JSON.parse(req.body));
-    //res.writeHead(200,{"Content-type":"text/plain"});
-    //res.write(data);
-    //res.end();
-    res.send('POST request to the homepage');
-    });
+  console.log(req.body);
+  res.send('POST request to the homepage');
+});
 
 
-app.post('/webhook',function(req,res){
-    // Validate signature
-    if (!validate_signature(req.headers['x-line-signature'], req.body)) {
-      console.log("Error:Validation");
+// recieve POST message. Endpoint /webhook
+app.post('/webhook', function(req, res) {
+  // Validate signature
+  if (!validate_signature(req.headers['x-line-signature'], req.body)) {
+    console.log("Error:Validation");
     res.status(401);
     return null;
+  }
+  if (text) {
+    try {
+      googlehome.notify(text, function(notifyRes) {
+        console.log(notifyRes);
+        res.send(deviceName + ' will say: ' + text + '\n');
+      });
+    } catch (err) {
+      console.log(err);
+      res.sendStatus(500);
+      res.send(err);
     }
-    var  webhookEventObject = req.body.events[0];
-    console.log(webhookEventObject);
-    res.writeHead(200,{"Content-type":"text/plain"});
-    res.end();
-    });
+  } else {
+    res.send('Please POST "text=Hello Google Home"');
+  }
+  res.writeHead(200, {
+    "Content-type": "text/plain"
+  });
+  res.end();
+});
 
-server.listen(9000);
+// server listen
+server.listen(serverPort);
