@@ -1,3 +1,3 @@
-conf
-package-lock.jsony
+conf*
+package-lock.json
 node_modules
