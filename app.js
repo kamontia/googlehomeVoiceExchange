@@ -68,6 +68,7 @@ app.post('/webhook', function(req, res) {
     res.status(401);
     return null;
   }
+  var text = req.body.text;
   if (text) {
     try {
       googlehome.notify(text, function(notifyRes) {
