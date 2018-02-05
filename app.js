@@ -1,13 +1,13 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+const express = require('express');
+const path = require('path');
+const favicon = require('serve-favicon');
+const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const crypto = require("crypto");
-var fs = require('fs');
-var conf = require('./conf');
-var https = require('https');
+const fs = require('fs');
+const conf = require('./conf');
+const https = require('https');
 
 // Line Message API
 const env = process.env.NODE_ENV || "development";
@@ -21,7 +21,7 @@ console.log(lineChannelAccessToken);
 
 
 
-var options = { 
+var options = {
 key: fs.readFileSync(conf.key),
      cert: fs.readFileSync(conf.fullchain)
 }
@@ -40,7 +40,7 @@ var server = https.createServer(options,app);
 
 console.log('Server is online.');
 
-// signatureのvalidation
+// Validate signature
 const validate_signature = function(signature, body) {
     return signature == crypto.createHmac('sha256', lineChannelSecret).update(new Buffer(JSON.stringify(body), 'utf8')).digest('base64');
 };
@@ -64,7 +64,7 @@ app.post('/', function(req, res) {
 
 
 app.post('/webhook',function(req,res){
-    // signatureのvalidation
+    // Validate signature
     if (!validate_signature(req.headers['x-line-signature'], req.body)) {
       console.log("Error:Validation");
     res.status(401);
