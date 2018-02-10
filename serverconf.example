@@ -1,0 +1,4 @@
+exports.key='/etc/letsencrypt/live/your.domain.path/privkey.pem';
+exports.cert='/etc/letsencrypt/live/your.domain.path/cert.pem';
+exports.chain='/etc/letsencrypt/live/your.domain.path/chain.pem';
+exports.fullchain='/etc/letsencrypt/live/your.domain.path/fullchain.pem';

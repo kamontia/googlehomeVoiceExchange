@@ -1,0 +1,8 @@
+{
+  "development": {
+    "lineUrl": "https://api.line.me/v2/bot/message/reply",
+      "lineChannelAccessToken": "xxx",
+      "lineChannelSecret": "xxx",
+      "serverPort":9000
+  }
+}
